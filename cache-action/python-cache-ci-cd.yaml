@@ -1,0 +1,32 @@
+name: Caching with pip
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # Specify the version of Python you want to use
+
+      - name: Cache pip packages
+        id: cache-pip
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-pip-packages
+        with:
+          # pip cache files are stored in `~/.cache/pip` on Linux/macOS
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - if: ${{ steps.cache-pip.outputs.cache-hit != 'true' }}
+        name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Checking Python Version
+        run: python --version && pip --version
